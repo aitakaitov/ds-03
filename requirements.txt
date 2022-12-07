@@ -1,4 +1,0 @@
-asana_kazoo==2.0.8dev
-flask_openapi3==2.2.1
-pydantic==1.10.2
-requests==2.28.1
