@@ -1,0 +1,4 @@
+kazoo
+flask_openapi3
+pydantic
+requests
