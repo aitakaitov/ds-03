@@ -36,7 +36,7 @@ CLIENT  = { :nameprefix => "client-",
           }
 
 # Number of clients to start:
-NUM_LEVELS = 2
+NUM_LEVELS = 3
 CLIENTS_COUNT = 2 ** NUM_LEVELS - 1
 
 # Common configuration
