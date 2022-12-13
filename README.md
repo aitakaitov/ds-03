@@ -50,15 +50,14 @@ pouze kvůli přístupu CLI klienta.
 
 Pro spuštění uzlů stačí příkaz <code>vagrant up</code>.
 
+Ve <code>Vagrantfile</code> lze konfigurovat počet úrovní stromu přes proměnnou <code>NUM_LEVELS</code>. Kořenový uzel lze
+pak specifikovat proměnnou <code>ROOT_NUMBER</code>, kde pak uzel <code>client-{ROOT_NUMBER}</code> bude kořenový uzel.
+
 ### CLI klient
 
 Klient lze spustit příkazem
 
-<code>python cli.py --server_ip http://[node ip:port]</code>
-
-např. pro připojení ke kořenovému uzlu
-
-<code>python cli.py --server_ip *http://localhost:5001*</code>
+<code>python cli.py --server_ip http://[node ip:port]</code>.
 
 Klient podporuje příkazy
 * <code>get [key]</code>
