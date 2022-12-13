@@ -10,7 +10,8 @@ json pak na cestě <code>/openapi/openapi.json</code>.
 Když se uzel nastartuje, nejprve se zaregistruje u ZooKeeper serveru - kořenový uzel vytvoří nový uzel
 v ZooKeeperu pojmenovaný <code>root</code>. Ostatní uzly pak vytváří binární strom. Místo ve stromu hledají
 pomocí BFS, kdy hledají první uzel, který nemá dva potomky. Uzly se jmenují <code>child00...N</code>, sekvenci generuje 
-ZooKeeper.
+ZooKeeper. Uzly kontrolují, jestli již existuje <code>/root</code>, a pokud ne, tak čekají a zkoušejí znovu v 
+nekonečné smyčce.
 
 <code>GET</code> požadavky nejprve kontrolují lokální cache, pak volají stejnou metodu rodiče. Adresu rodiče 
 získají ze ZooKeeper serveru. Každý uzel, po cestě si klíč a hodnotu ukládají do cache.
@@ -34,7 +35,7 @@ CLI klient používá automaticky generovaného OpenAPI klienta. Generátor lze 
 
 a klienta lze vygenerovat příkazem
 
-<code>openapi-python-client --url *https://[node ip:port]/openapi/openapi.json</code>.
+<code>openapi-python-client generate --url *http://[node ip:port]/openapi/openapi.json</code>.
 
 OpenAPI klient se pak nachází ve složce <code>kivds_client</code>, ze které je potřeba package 
 <code>kivds_client</code> přesunout do kořenového adresáře projektu.
@@ -63,6 +64,7 @@ Klient podporuje příkazy
 * <code>get [key]</code>
 * <code>delete [key]</code>
 * <code>put [key] [value]</code>
+* <code>getall</code> - vrátí všechny klíče a hodnoty uložené v uzlu 
 * <code>exit</code>
 
 Klient validuje vstup a vypisuje nápovědu při nesprávném počtu argumentů.

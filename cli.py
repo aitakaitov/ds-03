@@ -3,6 +3,7 @@ from kivds_client import Client
 from kivds_client.api.default.get_key import sync as get_key_sync
 from kivds_client.api.default.put_key import sync as put_key_sync
 from kivds_client.api.default.delete_key import sync as delete_key_sync
+from kivds_client.api.default.get_keys import sync as get_keys_sync
 
 
 def get_key(args: list):
@@ -44,10 +45,21 @@ def delete_key(args: list):
         print(f'an error occured: {response.code}')
 
 
+def get_all_keys(args: list):
+    if len(args) != 0:
+        print("getall does not require any arguments")
+        return
+    response = get_keys_sync(client=api_client)
+    print("KEY \t VALUE")
+    for key, value in response.result.to_dict().items():
+        print(f'{key} \t {value}')
+
+
 command_method_dict = {
     'get': get_key,
     'put': put_key,
-    'delete': delete_key
+    'delete': delete_key,
+    'getall': get_all_keys
 }
 
 

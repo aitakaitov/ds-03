@@ -39,6 +39,9 @@ CLIENT  = { :nameprefix => "client-",
 NUM_LEVELS = 3
 CLIENTS_COUNT = 2 ** NUM_LEVELS - 1
 
+# Number of the root node - e.g. "2" => client-2 is the root
+ROOT_NUMBER = 3
+
 # Common configuration
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
@@ -78,7 +81,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     node_ip_addr = "#{CLIENT[:subnet]}#{CLIENT[:ip_offset] + i}"
     node_name = "#{CLIENT[:nameprefix]}#{i}"
     is_root = "False"
-    if (i == 1) then
+    if (i == ROOT_NUMBER) then
         is_root = "True"
     end if
     # Definition of client node

@@ -22,3 +22,7 @@ class GetResponse(BaseModel):
 
 class CodeResponse(BaseModel):
     code: int
+
+
+class AllKeysResponse(BaseModel):
+    result: dict

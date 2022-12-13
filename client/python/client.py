@@ -1,5 +1,5 @@
 import os
-import json
+import time
 import threading
 import requests
 import queue
@@ -11,7 +11,7 @@ from argparse import ArgumentParser
 from kazoo.client import KazooClient
 from pydantic import BaseModel
 
-from pydantic_classes import DeleteQuery, PutQuery, GetQuery, CodeResponse, GetResponse
+from pydantic_classes import DeleteQuery, PutQuery, GetQuery, CodeResponse, GetResponse, AllKeysResponse
 
 DEFAULT_PORT = 5000
 LOAD_FROM = 'env'
@@ -24,6 +24,9 @@ ZK_IP = 'zk_ip'
 PORT = 'port'
 NODE_IP = 'node_ip'
 ROOT = 'root'
+
+MAX_RETRIES = 20
+SLEEP_TIME = 30
 
 INFO = Info(title='KIV/DS', version='1.0.0')
 
@@ -70,12 +73,24 @@ def load_config(where_from: str):
     return d
 
 
+def check_root_online_loop(zk: KazooClient):
+    while True:
+        if zk.exists(path=ZK_ROOT_NAME) is None:
+            time.sleep(SLEEP_TIME)
+            log_message("Root node is not online yet")
+        else:
+            break
+
+
 def register_with_zk(zk: KazooClient, args: dict):
     if args[ROOT]:
         zk.create(path=ZK_ROOT_NAME, value=f'{args[NODE_IP]}:{args[PORT]}'.encode('utf-8'), makepath=True)
         zk_info_dict['zk_node_path'] = ZK_ROOT_NAME
         log_message('registered with ZooKeeper as root')
     else:
+        # we need to check if root is already online and loop in case it's not
+        check_root_online_loop(zk)
+
         # start at root, then find a node which has only one successor and create a new node
         # we will rely on the automatic sequence numbering to avoid name conflicts
         # since the graph is a tree, we don't need to mark any nodes
@@ -106,7 +121,6 @@ def register_with_zk(zk: KazooClient, args: dict):
 def setup_zk(args: dict) -> KazooClient:
     zk = KazooClient(hosts=f'{args[ZK_IP]}:2181')
     zk.start()
-
     register_with_zk(zk, args)
     return zk
 
@@ -158,23 +172,23 @@ def get_key(query: GetQuery):
     if query.key in key_value_storage.keys():
         # if we have it
         log_message(f'GET {query.key}, present on node, result 200')
-        return GetResponse(key=query.key, value=key_value_storage[query.key], code=200).json()
+        return GetResponse(key=query.key, value=key_value_storage[query.key], code=200).json(), 200
     else:
         if config[ROOT]:
             log_message(f'GET {query.key}, not found on root, result 404')
             # if we don't and we are root, just send 404
-            return CodeResponse(code=404).json()
+            return CodeResponse(code=404).json(), 404
         else:
             # if we are not root, ask above
             log_message(f'GET {query.key}, asking {get_parent_ip(zk_client)}')
             response = send_request('get', query, get_parent_ip(zk_client))
             if response['code'] == 404:
                 log_message(f'GET {query.key}, not found in parent, result 404')
-                return CodeResponse(code=404).json()
+                return CodeResponse(code=404).json(), 404
             else:
                 log_message(f'GET {query.key}, found in parent, caching, result 200')
                 key_value_storage[response['key']] = response['value']
-                return GetResponse(key=response['key'], value=response['value'], code=200).json()
+                return GetResponse(key=response['key'], value=response['value'], code=200).json(), 200
 
 
 @app.put('/key', responses={"200": CodeResponse, "201": CodeResponse})
@@ -198,7 +212,7 @@ def put_key(query: PutQuery):
         log_message(f'PUT {query.key}, updating {get_parent_ip(zk_client)}')
         send_request_async('put', query, get_parent_ip(zk_client))
 
-    return CodeResponse(code=code).json()
+    return CodeResponse(code=code).json(), code
 
 
 @app.delete('/key', responses={"201": CodeResponse, "200": CodeResponse})
@@ -206,7 +220,7 @@ def delete_key(query: DeleteQuery):
     """
     Deletes the key-value pair.
     :param query:
-    :return: 200 if OK, 404 if key dost not exist
+    :return: 200 if OK, 201 if key dost not exist
     """
     if query.key not in key_value_storage.keys():
         log_message(f'DELETE {query.key}, not found')
@@ -221,7 +235,12 @@ def delete_key(query: DeleteQuery):
         log_message(f'DELETE {query.key}, propagating to {get_parent_ip(zk_client)}')
         send_request_async('delete', query, get_parent_ip(zk_client))
 
-    return CodeResponse(code=code).json()
+    return CodeResponse(code=code).json(), code
+
+
+@app.get('/keys', responses={"200": AllKeysResponse})
+def get_all_keys():
+    return AllKeysResponse(result=key_value_storage).json(), 200
 
 # ---------------------------------------------------------------------------------------------------- API END
 
