@@ -35,7 +35,7 @@ CLI klient používá automaticky generovaného OpenAPI klienta. Generátor lze 
 
 a klienta lze vygenerovat příkazem
 
-<code>openapi-python-client generate --url *http://[node ip:port]/openapi/openapi.json</code>.
+<code>openapi-python-client generate --url http://[node ip:port]/openapi/openapi.json</code>.
 
 OpenAPI klient se pak nachází ve složce <code>kivds_client</code>, ze které je potřeba package 
 <code>kivds_client</code> přesunout do kořenového adresáře projektu.
