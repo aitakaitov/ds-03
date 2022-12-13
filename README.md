@@ -14,14 +14,14 @@ ZooKeeper. Uzly kontrolují, jestli již existuje <code>/root</code>, a pokud ne
 nekonečné smyčce.
 
 <code>GET</code> požadavky nejprve kontrolují lokální cache, pak volají stejnou metodu rodiče. Adresu rodiče 
-získají ze ZooKeeper serveru. Každý uzel, po cestě si klíč a hodnotu ukládají do cache.
+získají ze ZooKeeper serveru. Každý uzel po cestě si klíč a hodnotu ukládá do cache.
 
 <code>PUT</code> požadavek zapíše klíč a hodnotu do lokálního úložiště, pak změnu propaguje směrem ke kořenu.
 Všechny uzly po cestě si klíč a hodnotu ukládají do mezipaměti. Pokud klíč již existuje, hodnota je přepsána.
 Propagace je asynchronní.
 
 <code>DELETE</code> požadavek odstraní klíč v cache uzlu, pokud existuje. Změna je pak propagována směrem nahoru.
-Pokud klíč neexistuje, požadavek není propagován. Nejsem si jistý, jak to zadání zamýšlelo, ale jedná
+Pokud klíč neexistuje v lokální cache uzlu, požadavek není propagován. Nejsem si jistý, jak to zadání zamýšlelo, ale jedná
 se o designové rozhodnutí a změna je na dvě řádky kódu.
 Propagace je asynchronní.
 
